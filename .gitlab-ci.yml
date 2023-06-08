@@ -1,0 +1,112 @@
+stages:
+  - build
+  - test
+  - versionning
+  - publish
+  - deploy
+
+# Build phase
+# Lauch on merge request
+# Check if the application build without any issue
+build_app:
+  stage: build
+  image: 'node:lts-alpine'
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH
+  script: 
+    - npm install
+    - npm run build
+
+# Test phase
+# Lauch on merge request
+# Test the application
+# For now we don't have any test to do
+# test_app:
+#   stage: test
+#   rules:
+#     - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH
+#   script: 
+#     -
+
+# Versionning phase
+# Launch on merge/push to the "main" branch
+# Update the application version
+# versionning_app:
+#   stage: versionning
+#   variables:
+#     CURRENT_VERSION: "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
+#   rules:
+#     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"
+#   script:
+#     - |
+#       OLD_VERSION=$(sed -n 's;.*"version": "\(.*\)",;\1;p' './package.json')
+#     - |
+#       if [ $OLD_VERSION == $CURRENT_VERSION ]; then
+#         NEW_VERSION_PATCH=`expr $VERSION_PATCH + 1`
+#         curl --request PUT --header "PRIVATE-TOKEN: ${CI_API_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/VERSION_PATCH" --form "value=${NEW_VERSION_PATCH}"
+#       else
+#         IFS='.'
+#         read -ra NEW_VERSION <<< $OLD_VERSION
+#         curl --request PUT --header "PRIVATE-TOKEN: ${CI_API_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/VERSION_MAJOR" --form "value=${NEW_VERSION[0]}"
+#         curl --request PUT --header "PRIVATE-TOKEN: ${CI_API_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/VERSION_MINOR" --form "value=${NEW_VERSION[1]}"
+#         curl --request PUT --header "PRIVATE-TOKEN: ${CI_API_TOKEN}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/variables/VERSION_PATCH" --form "value=${NEW_VERSION[2]}"
+#       fi
+
+# # Publish phase
+# # Launch on merge/push to the "main" branch
+# # Publish the application's image on the registry
+# publish_app:
+#   stage: publish
+#   image: docker:latest
+#   variables:
+#     NEW_VERSION: "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
+#   rules:
+#     - if: $CI_COMMIT_REF_NAME  == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"
+#   services:
+#     - docker:dind
+#   before_script:
+#     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+#   script:
+#     - docker ps
+#     - docker build --pull -t "$CI_REGISTRY_IMAGE:$NEW_VERSION" .
+#     - docker push "$CI_REGISTRY_IMAGE:$NEW_VERSION"
+#     - docker tag "$CI_REGISTRY_IMAGE:$NEW_VERSION" "$CI_REGISTRY_IMAGE:latest"
+#     - docker push "$CI_REGISTRY_IMAGE:latest"
+
+# # Deploy phase
+# # Launch on merge/push to the "main" branch
+# # Deploy the application on its target destination and update the git repository to updete the version
+# # For now we do not deploy our application anywhere, but maibe later if we accire a server
+# deploy_app:
+#   stage: deploy
+#   image: alpine:3.8
+#   variables:
+#     NEW_VERSION: "$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH"
+#   rules:
+#     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"
+#   before_script:
+#     - apk add --no-cache git curl bash coreutils
+#     - curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+#     - mv kustomize /usr/local/bin/
+#     - git remote set-url origin https://${CI_USERNAME}:${CI_PUSH_TOKEN}@gitlab.com/elective-logiciel/front-end/cesi-eats.git
+#     - git config --global user.email "gitlab@gitlab.com"
+#     - git config --global user.name "GitLab CI/CD"
+#   script:
+#     - git checkout -B main
+#     - git pull origin main
+#     - |
+#       OLD_VERSION=$(sed -n 's;.*"version": "\(.*\)",;\1;p' './package.json')
+#     - echo $OLD_VERSION
+#     - echo $NEW_VERSION
+#     - sed -i "s/${OLD_VERSION}/${NEW_VERSION}/g" ./package.json
+#     # - cd deployment/dev
+#     # - kustomize edit set image $CI_REGISTRY_IMAGE:$NEW_VERSION
+#     # - cd ../prod
+#     # - kustomize edit set image $CI_REGISTRY_IMAGE:$NEW_VERSION
+#     - git add --all
+#     - git status
+#     - git commit -am "[skip ci] Pipeline completed, application version:${NEW_VERSION}"
+#     - git push origin main
+#     - git checkout -B dev
+#     - git merge main dev
+#     - git push origin dev
