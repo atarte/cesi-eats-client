@@ -1,7 +1,6 @@
 import { Router } from 'express';
-import { ClientData } from '../data/mssql.data';
+import { ClientData } from '../data/client.data';
 import { User, convertQueryResToUser, convertQueryResToUsersList } from '../models/user.model';
-import { Error400 } from '../errors/errors';
 
 const clientController = Router();
 const MssqlDB = new ClientData();
@@ -35,32 +34,19 @@ clientController.get('/all', async(req, res, next) => {
 // Add client
 clientController.post('/add', async(req, res, next) => {
     try {
-        const email: string = req.body.email
-        if(email === undefined) throw new Error400("Missing argument, 'email' can not be NULL")
-        if(email === "") throw new Error400("Empty argument, 'email' can not be empty");
-            
-        const password: string = req.body.password
-        if (password === undefined) throw new Error400("Missing argument, 'password' can not be null")
-        if (password === "") throw new Error400("Empty argument, 'password' can not be EMPTY");
+        const user: User =  new User({
+            email: req.body.email,
+            password: req.body.password,
+            name: req.body.name,
+            first_name: req.body.first_name
+        })
 
-        const name: string = req.body.name
-        if (name === undefined) throw new Error400("Missing argument, 'name' can not be NULL")
-        if (name === "") throw new Error400("Empty argument, name can not be empty");
+        user.IsEmailValid()
+        user.IsPasswordValid()
+        user.IsNameValid()
+        user.IsFirstNameValid()
 
-        const first_name: string = req.body.first_name
-        if (first_name === undefined) throw new Error400("Missing argument, 'first_name' can not be null")
-        if (first_name === "") throw new Error400("Empty argument, 'first_name' can not be EMPTY");
-
-        await MssqlDB.InsertUser(email, password, name, first_name)
-
-        // var user: User = new User()
-        // await MssqlDB.InsertUser(user{
-        //     email: email,
-        //     password: password,
-        //     name: name,
-        //     first_name: first_name,
-        //     id_types: 6
-        // })
+        await MssqlDB.InsertUser(user)
 
         res.sendStatus(200)
         
@@ -72,10 +58,6 @@ clientController.post('/add', async(req, res, next) => {
 // Delete client by id
 clientController.delete('/delete/:id(\\d+)', async(req, res, next) => {
     try {
-        // const id_users: string = req.body.id_users
-        // if (id_users === undefined) throw new Error400("Missing argument, 'id_users' can not be NULL")
-        // if (id_users === "") throw new Error400("Empty argument, 'id_users' can not be empty");
-
         await MssqlDB.DeleteUserById(req.params.id)
 
         res.sendStatus(200)
@@ -88,15 +70,15 @@ clientController.delete('/delete/:id(\\d+)', async(req, res, next) => {
 // Update client email by id
 clientController.put('/update/email', async (req, res, next) => {
     try {
-        const id_users: number = req.body.id_users
-        if (id_users === undefined) throw new Error400("Missing argument, 'id_users' can not be NULL")
-        if (id_users < 0) throw new Error400("Out of range argument, 'id_users' can not be a negative number");
+        let user: User = new User({
+            id_users: req.body.id_users,
+            email: req.body.email,
+        })
 
-        const email: string = req.body.email
-        if (email === undefined) throw new Error400("Missing argument, 'email' can not be NULL")
-        if (email === "") throw new Error400("Empty argument, 'email' can not be empty");
+        user.IsIdUsersValid()
+        user.IsEmailValid()
 
-        await MssqlDB.UpdateUserEmailById(id_users, email)
+        await MssqlDB.UpdateUserEmailById(user)
 
         res.sendStatus(200)
 
@@ -108,15 +90,15 @@ clientController.put('/update/email', async (req, res, next) => {
 // Update client password by id
 clientController.put('/update/password', async (req, res, next) => {
     try {
-        const id_users: number = req.body.id_users
-        if (id_users === undefined) throw new Error400("Missing argument, 'id_users' can not be NULL")
-        if (id_users < 0) throw new Error400("Out of range argument, 'id_users' can not be a negative number");
+        let user: User = new User({
+            id_users: req.body.id_users,
+            password: req.body.password,
+        })
 
-        const password: string = req.body.password
-        if (password === undefined) throw new Error400("Missing argument, 'password' can not be NULL")
-        if (password === "") throw new Error400("Empty argument, 'password' can not be empty");
+        user.IsIdUsersValid()
+        user.IsPasswordValid()
 
-        await MssqlDB.UpdateUserPasswordById(id_users, password)
+        await MssqlDB.UpdateUserPasswordById(user)
 
         res.sendStatus(200)
 
@@ -128,15 +110,15 @@ clientController.put('/update/password', async (req, res, next) => {
 // Update client name by id 
 clientController.put('/update/name', async (req, res, next) => {
     try {
-        const id_users: number = req.body.id_users
-        if (id_users === undefined) throw new Error400("Missing argument, 'id_users' can not be NULL")
-        if (id_users < 0) throw new Error400("Out of range argument, 'id_users' can not be a negative number");
+        let user: User = new User({
+            id_users: req.body.id_users,
+            name: req.body.name,
+        })
 
-        const name: string = req.body.name
-        if (name === undefined) throw new Error400("Missing argument, 'name' can not be NULL")
-        if (name === "") throw new Error400("Empty argument, 'name' can not be empty");
+        user.IsIdUsersValid()
+        user.IsNameValid()
 
-        await MssqlDB.UpdateUserNameById(id_users, name)
+        await MssqlDB.UpdateUserNameById(user)
 
         res.sendStatus(200)
         
@@ -145,18 +127,18 @@ clientController.put('/update/name', async (req, res, next) => {
     }
 })
 
-// Update client first_name by id
+// Update client first name by id
 clientController.put('/update/first_name', async (req, res, next) => {
     try {
-        const id_users: number = req.body.id_users
-        if (id_users === undefined) throw new Error400("Missing argument, 'id_users' can not be NULL")
-        if (id_users < 0) throw new Error400("Out of range argument, 'id_users' can not be a negative number");
+        let user: User = new User({
+            id_users: req.body.id_users,
+            first_name: req.body.first_name,
+        })
 
-        const first_name: string = req.body.first_name
-        if (first_name === undefined) throw new Error400("Missing argument, 'first_name' can not be NULL")
-        if (first_name === "") throw new Error400("Empty argument, 'first_name' can not be empty");
+        user.IsIdUsersValid()
+        user.IsFirstNameValid()
 
-        await MssqlDB.UpdateUserFirstNameById(id_users, first_name)
+        await MssqlDB.UpdateUserFirstNameById(user)
 
         res.sendStatus(200)
     } catch (err) {
@@ -167,16 +149,15 @@ clientController.put('/update/first_name', async (req, res, next) => {
 // Update client parrain by id
 clientController.put('/update/parrain',async (req, res, next) => {
     try {
-        const id_users: number = req.body.id_users
-        if (id_users === undefined) throw new Error400("Missing argument, 'id_users' can not be NULL")
-        if (id_users < 0) throw new Error400("Out of range argument, 'id_users' can not be a negative number");
+        let user: User = new User({
+            id_users: req.body.id_users,
+            id_parrain: req.body.id_parrain,
+        })
 
-        const id_parrain: number = req.body.id_parrain
-        if (id_parrain === undefined) throw new Error400("Missing argument, 'id_parrain' can not be NULL")
-        if (id_parrain < 0) throw new Error400("Out of range argument, 'id_parrain' can not be a negative number");
-        
+        user.IsIdUsersValid()
+        user.IsIdParrainValid()
 
-        await MssqlDB.UpdateIdParrainById(id_users, id_parrain)
+        await MssqlDB.UpdateIdParrainById(user)
 
         res.sendStatus(200)
     } catch (err) {
@@ -185,74 +166,18 @@ clientController.put('/update/parrain',async (req, res, next) => {
 })
 
 // Remove client parrain by id
-clientController.put('/update/parrain/remove', async (req, res, next) => {
+clientController.put('/remove/parrain/', async (req, res, next) => {
     try {
-        const id_users: number = req.body.id_users
-        if (id_users === undefined) throw new Error400("Missing argument, 'id_users' can not be NULL")
-        if (id_users < 0) throw new Error400("Out of range argument, 'id_users' can not be a negative number");
+        let user: User = new User({
+            id_users: req.body.id_users,
+            id_parrain: undefined,
+        })
 
-        await MssqlDB.UpdateIdParrainById(id_users, null)
+        user.IsIdUsersValid()
+
+        await MssqlDB.UpdateIdParrainById(user)
 
         res.sendStatus(200)
-    } catch (err) {
-        next(err)
-    }
-})
-
-// Verify if email has already been use
-clientController.get('/verify/email/:email',async (req, res, next) => {
-    try {
-        const email: string = req.params.email
-        if (email === undefined) throw new Error400("Missing argument, 'email' can not be NULL")
-        if (email === "") throw new Error400("Empty argument, 'email' can not be empty");
-
-        const query_res = await MssqlDB.GetUserByEmail(email)
-
-        if (query_res.rowsAffected != 0) {
-            res.status(200)
-                .json({
-                    message: "This email is already being used",
-                    result: true
-            })
-        } else {
-            res.status(200)
-                .json({
-                    message: "This email has not been used",
-                    result: false
-                })
-        }
-    } catch (err) {
-        next(err)
-    }
-})
-
-// Verify if password is correct by id
-clientController.get('/verify/password/',async (req, res, next) => {
-    try {
-        const id_users: number = req.body.id_users
-        if (id_users === undefined) throw new Error400("Missing argument, 'id_users' can not be NULL")
-        if (id_users < 0) throw new Error400("Out of range argument, 'id_users' can not be a negative number");
-
-        const password: string = req.body.password
-        if (password === undefined) throw new Error400("Missing argument, 'password' can not be NULL")
-        if (password === "") throw new Error400("Empty argument, 'password' can not be empty");
-
-        const query_res = await MssqlDB.GetUserPasswordById(id_users)
-
-        res.json(query_res)
-        // if (query_res.recordset[0].Password == password) {
-        //     res.status(200)
-        //         .json({
-        //             message: "This password is correct",
-        //             result: true
-        //         })
-        // } else {
-        //     res.status(200)
-        //         .json({
-        //             message: "This password is incorrect",
-        //             result: false
-        //         })
-        // }
     } catch (err) {
         next(err)
     }

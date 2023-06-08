@@ -2,39 +2,42 @@ import express from 'express'
 import { clientController } from './controllers/client.controller'
 import { addressController } from './controllers/adress.controller'
 import { banckingCardsController } from './controllers/bancking_cards.controller'
-const { logError, returnError } = require('./errors/errorHandler')
+import { Error404 } from './errors/errors'
 
+const { logError, returnError } = require('./errors/errorHandler')
 const config = require('./config')
 
 /**
- * On créé une nouvelle "application" express
+ * App creation
  */
 const app = express()
 
 /**
- * On dit à Express que l'on souhaite parser le body des requêtes en JSON
- *
- * @example app.post('/', (req) => req.body.prop)
+ * Deffining requets parsing
  */
 app.use(express.json())
 
 // /**
-//  * On dit à Express que l'on souhaite autoriser tous les noms de domaines
-//  * à faire des requêtes sur notre API.
+//  * Authorization to connect to this api
 //  */
 // app.use(cors())
 
 /**
- * Toutes les routes
+ * Route handling
  */
 app.use('/client', clientController)
 app.use('/client/address', addressController)
 app.use('/client/bancking_cards', banckingCardsController)
 
+// default route
+app.use('*', (req, res) => {
+    throw new Error404('Invalid route, this path does not exist.')
+})
+
 /**
- * Homepage
+ * Root page
  */
-// app.get('/', (req, res) => res.send('🏠'))
+// app.get('/', (req, res) => res.send('hello world'))
 
 /**
  * Errors handling
@@ -42,8 +45,7 @@ app.use('/client/bancking_cards', banckingCardsController)
 app.use(logError)
 app.use(returnError)
 
-
 /**
- * On demande à Express d'ecouter les requêtes sur le port défini dans la config
+ * Lauching serveur
  */
 app.listen(config.port, () => console.log('Starting server listening on port', config.port))

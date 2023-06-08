@@ -1,5 +1,3 @@
-import { BaseError } from "./baseError"
-
 function logError (err) {
     console.error(err)
 }

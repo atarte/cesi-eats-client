@@ -13,11 +13,12 @@ const {
     SQL_DATABASE,
     SQL_USER,
     SQL_PASSWORD,
-    SQL_EATS_NAME,
-    SQL_DRIVER
+    SQL_POOL_NAME,
+    SQL_DRIVER,
+    SQL_ENCRYPT
 } = process.env;
 
-const sqlEncrypt = process.env.SQL_ENCRYPT === "true";
+// const sqlEncrypt = process.env.SQL_ENCRYPT === "true";
 
 // validate the required configuration information
 assert(PORT, "PORT configuration is required.");
@@ -27,8 +28,9 @@ assert(SQL_SERVER, "SQL_SERVER configuration is required.");
 assert(SQL_DATABASE, "SQL_DATABASE configuration is required.");
 assert(SQL_USER, "SQL_USER configuration is required.");
 assert(SQL_PASSWORD, "SQL_PASSWORD configuration is required.");
-assert(SQL_EATS_NAME, "SQL_EATS_NAME configuration is required.");
+assert(SQL_POOL_NAME, "SQL_EATS_NAME configuration is required.");
 assert(SQL_DRIVER, "SQL_DRIVER configuration is required.");
+assert(SQL_ENCRYPT, "SQL_ENCRYPT configuration is required.");
 
 // export the configuration information
 module.exports = {
@@ -41,9 +43,9 @@ module.exports = {
         user: SQL_USER,
         password: SQL_PASSWORD,
         dirver: SQL_DRIVER,
-        pool_name: SQL_EATS_NAME,
+        pool_name: SQL_POOL_NAME,
         options: {
-            encrypt: sqlEncrypt
+            encrypt: SQL_ENCRYPT
         }
     }
 };

@@ -45,7 +45,6 @@ export class mssql {
             // automatically remove the pool from the cache if `pool.close()` is called
             const close = pool.close.bind(pool);
             pool.close = (...args) => {
-                console.log('prout mssql');
                 pools.delete(name);
                 return close(...args);
             }
